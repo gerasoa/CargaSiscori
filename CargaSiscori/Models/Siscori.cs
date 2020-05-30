@@ -4,8 +4,9 @@ using System.Text;
 
 namespace CargaSiscori.Models
 {
-    public class Siscori
+    public class Siscori : Entity
     {
+     
         public string Ordem { get; set; }
 
         public string AnoMes { get; set; }
