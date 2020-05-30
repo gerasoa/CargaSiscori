@@ -101,18 +101,14 @@ namespace CargaSiscori
                 {
                     Console.WriteLine(String.Format("Ocorreu um erro: {0}", e.Message));                    
                 }
-
                 
                 reader.Close();
 
-
                 var arquivoAtual = arquivo.Split("\\").Last();
 
-
                 File.Delete(arquivoCsv);
-                var origem = arquivo;
-                var destino = string.Format("{0}{1}{2}",PastaDestino, "\\" , arquivoAtual);
-                File.Move(origem, destino);
+                File.Move(arquivo, string.Format("{0}{1}{2}", PastaDestino, "\\", arquivoAtual));
+
                 return importacoesDoCapitulo;
             }          
         }
@@ -145,19 +141,32 @@ namespace CargaSiscori
         }
 
         private static void Adicionar(IList<Siscori> entity)
-        {
+        { 
+            var status = string.Empty;        
+            
             using (var db = new BWContext())
             {
                 try
                 {
-                    db.BulkInsert(entity);                    
+                    db.BulkInsert(entity);
                     Console.WriteLine("Capitulo {0} data {1} importados {2} arquivos.", entity[0].NcmCodigo, entity[0].AnoMes, entity.Count);
+                    status = "Processado";
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("Ocorreu um erro: {0} no Capitulo {1} data {2}", e.Message, entity[0].NcmCodigo, entity[0].AnoMes);
+                    status = e.Message;
                 }
-               
+                finally
+                {
+                    Log.LogGravacao(new LogEntity { 
+                    AnoMes = entity[0].AnoMes,
+                    Capitulo = entity[0].NcmCodigo.Substring(0,2),
+                    Linhas = entity.Count,
+                    Status = status,
+                    Data = DateTime.Now
+                    });                    
+                }
             }   
         }
     }

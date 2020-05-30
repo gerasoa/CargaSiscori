@@ -9,21 +9,11 @@ namespace CargaSiscori.Context
     public class BWContext : DbContext
     {    
         public DbSet<Siscori> Siscori { get; set; }
+        public DbSet<LogEntity> LogEntity { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseNpgsql(Configuration.GetConnectionString());
-        }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-
-            //modelBuilder.Entity<Siscori>(e => 
-            //{
-            //    e.HasNoKey();
-            //});
-
-            base.OnModelCreating(modelBuilder); 
         }
     }
 }

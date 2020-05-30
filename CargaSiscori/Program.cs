@@ -17,13 +17,10 @@ namespace CargaSiscori
     {
         static void Main(string[] args)
         {
-
             //Process process = new Process();
-            Process.ProcessarArquivos(); 
-
+            var res = Process.ProcessarArquivos();
+            Console.WriteLine("Finalizado sem error: {0}", res);
             Console.ReadLine();
-        }   
-        
-
+        }  
     }
 }
