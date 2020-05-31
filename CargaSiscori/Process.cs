@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.IO.Compression;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
+using System.Threading;
 
 namespace CargaSiscori
 {
@@ -29,7 +30,7 @@ namespace CargaSiscori
                 return false;
 
             var arquivosParaImportacao = ListarArquivosParaImportacao();
-
+  
             if (arquivosParaImportacao == null)
                 status = false;
 
@@ -40,7 +41,7 @@ namespace CargaSiscori
             }
 
             return status;
-        }
+        }     
 
         private static IList<Siscori> LerArquivoCSV(string arquivo)
         {
@@ -50,10 +51,13 @@ namespace CargaSiscori
 
             var arquivoCsv = arquivo.Replace(".zip", ".CSV");
 
-            using (var reader = new StreamReader(arquivoCsv, Encoding.GetEncoding("iso-8859-1")))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            if (!File.Exists(arquivoCsv))
+                return null;
+
+            try
             {
-                try
+                using (var reader = new StreamReader(arquivoCsv, Encoding.GetEncoding("iso-8859-1")))
+                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
                 {
                     csv.Configuration.Delimiter = "@";
                     csv.Configuration.BadDataFound = null;
@@ -96,31 +100,46 @@ namespace CargaSiscori
                             VoumeFrenteDolar = record.VoumeFrenteDolar.Trim()
                         });
                     }
+                    reader.Close();
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine(String.Format("Ocorreu um erro: {0}", e.Message));                    
-                }
-                
-                reader.Close();
-
+            }          
+            catch (Exception e)
+            {
+                Console.WriteLine(String.Format("Ocorreu um erro: {0}", e.Message));
+            }
                 var arquivoAtual = arquivo.Split("\\").Last();
 
                 File.Delete(arquivoCsv);
                 File.Move(arquivo, string.Format("{0}{1}{2}", PastaDestino, "\\", arquivoAtual));
 
                 return importacoesDoCapitulo;
-            }          
+            }                  
+
+        private static List<string> ListarArquivosParaImportacao()
+        {
+            if (!VerificaPastasParaImportacao())
+                return new List<string>();
+
+            ExtrairArquivosAnuais();
+
+            var arquivosParaImportacao = Directory.GetFiles(PastaOrigem, "*.zip").ToList();
+
+            return arquivosParaImportacao;
         }
 
-        private static string[] ListarArquivosParaImportacao()
+        private static void ExtrairArquivosAnuais()
         {
-            if (VerificaPastasParaImportacao())
-            {
-                return Directory.GetFiles(PastaOrigem, "*.zip");
-            }
+            var arquivosParaImportacaoAnual = Directory.GetFiles(PastaOrigem, "*.zip")
+                            .ToList()
+                            .Where(filter => filter.Split("\\")
+                            .Last()
+                            .Length > 14);
 
-            return null;
+            foreach (var item in arquivosParaImportacaoAnual)
+            {
+                ZipFile.ExtractToDirectory(item, PastaOrigem);
+                File.Delete(item);
+            }
         }
 
         private static bool VerificaPastasParaImportacao()
@@ -151,6 +170,7 @@ namespace CargaSiscori
                     db.BulkInsert(entity);
                     Console.WriteLine("Capitulo {0} data {1} importados {2} arquivos.", entity[0].NcmCodigo, entity[0].AnoMes, entity.Count);
                     status = "Processado";
+                    System.Threading.Thread.Sleep(5000);
                 }
                 catch (Exception e)
                 {
