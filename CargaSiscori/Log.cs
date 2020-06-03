@@ -19,8 +19,14 @@ namespace CargaSiscori
                 }
                 catch (Exception e)
                 {
-                    throw new Exception(e.Message); 
-                }                
+                    Console.WriteLine("Ocorreu um erro ao logar a gravacao Siscori: {0} - {1}", log.Capitulo, log.AnoMes);
+                    Console.WriteLine("Erro: ", e.Message);
+                    Console.WriteLine("");
+                       }
+                finally
+                {
+                    db.Dispose();
+                }
             }
         }        
     }

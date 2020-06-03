@@ -18,8 +18,10 @@ namespace CargaSiscori
         static void Main(string[] args)
         {
             //Process process = new Process();
+            Console.WriteLine("Inicio do processamento: {0}", DateTime.Now);
             var res = Process.ProcessarArquivos();
-            Console.WriteLine("Finalizado sem error: {0}", res);
+
+            Console.WriteLine("Finalizado em: {0}", DateTime.Now);
             Console.ReadLine();
         }  
     }
